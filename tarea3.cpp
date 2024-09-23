@@ -1,19 +1,27 @@
 #include <iostream>
-#include <vector>
 #include <chrono>
-#include <algorithm>  
 
-#define MAX 500
-#define BLOCK_SIZE 50  
+const int N = 500;
+const int TAMANIO_BLOQUE = 50;
 
-void multiplicacionBloques(const std::vector<std::vector<int>> &A, const std::vector<std::vector<int>> &B, std::vector<std::vector<int>> &C) {
-    for (std::size_t i = 0; i < MAX; i += BLOCK_SIZE) {
-        for (std::size_t j = 0; j < MAX; j += BLOCK_SIZE) {
-            for (std::size_t k = 0; k < MAX; k += BLOCK_SIZE) {
-                for (std::size_t ii = i; ii < std::min(i + BLOCK_SIZE, static_cast<std::size_t>(MAX)); ++ii) {
-                    for (std::size_t jj = j; jj < std::min(j + BLOCK_SIZE, static_cast<std::size_t>(MAX)); ++jj) {
-                        for (std::size_t kk = k; kk < std::min(k + BLOCK_SIZE, static_cast<std::size_t>(MAX)); ++kk) {
-                            C[ii][jj] += A[ii][kk] * B[kk][jj];
+void inicializar_matrices(double A[N][N], double B[N][N], double C[N][N]) {
+    for (int i = 0; i < N; ++i) {
+        for (int j = 0; j < N; ++j) {
+            A[i][j] = 1.0;
+            B[i][j] = 2.0;
+            C[i][j] = 0.0;
+        }
+    }
+}
+
+void multiplicacion_matrices_por_bloques(double A[N][N], double B[N][N], double C[N][N]) {
+    for (int ii = 0; ii < N; ii += TAMANIO_BLOQUE) {
+        for (int jj = 0; jj < N; jj += TAMANIO_BLOQUE) {
+            for (int kk = 0; kk < N; kk += TAMANIO_BLOQUE) {
+                for (int i = ii; i < std::min(ii + TAMANIO_BLOQUE, N); ++i) {
+                    for (int j = jj; j < std::min(jj + TAMANIO_BLOQUE, N); ++j) {
+                        for (int k = kk; k < std::min(kk + TAMANIO_BLOQUE, N); ++k) {
+                            C[i][j] += A[i][k] * B[k][j];
                         }
                     }
                 }
@@ -23,33 +31,18 @@ void multiplicacionBloques(const std::vector<std::vector<int>> &A, const std::ve
 }
 
 int main() {
-    std::vector<std::vector<int>> A(MAX, std::vector<int>(MAX, 1));
-    std::vector<std::vector<int>> B(MAX, std::vector<int>(MAX, 2));
-    std::vector<std::vector<int>> C(MAX, std::vector<int>(MAX, 0));
+    double A[N][N], B[N][N], C[N][N];
 
-    auto start = std::chrono::high_resolution_clock::now();
-    multiplicacionBloques(A, B, C);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> duration_bloques = end - start;
-    std::cout << "Tiempo para la multiplicación de matrices por bloques de tamaño " << MAX << ": " << duration_bloques.count() << " segundos." << std::endl;
+    inicializar_matrices(A, B, C);
 
-    std::fill(C.begin(), C.end(), std::vector<int>(MAX, 0));
+    auto inicio = std::chrono::high_resolution_clock::now();
+    
+    multiplicacion_matrices_por_bloques(A, B, C);
+    
+    auto fin = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duracion = fin - inicio;
 
-    start = std::chrono::high_resolution_clock::now();
-    for (std::size_t i = 0; i < MAX; ++i) {
-        for (std::size_t j = 0; j < MAX; ++j) {
-            C[i][j] = 0;
-            for (std::size_t k = 0; k < MAX; ++k) {
-                C[i][j] += A[i][k] * B[k][j];
-            }
-        }
-    }
-    end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> duration_clasica = end - start;
-    std::cout << "Tiempo para la multiplicación de matrices clásica de tamaño " << MAX << ": " << duration_clasica.count() << " segundos." << std::endl;
-
-    // Comparación de resultados
-    std::cout << "Multiplicación por bloques es " << (duration_clasica.count() / duration_bloques.count()) << " veces más rápida que la multiplicación clásica." << std::endl;
+    std::cout << "Tiempo de ejecución (bloques): " << duracion.count() << " segundos\n";
 
     return 0;
 }
